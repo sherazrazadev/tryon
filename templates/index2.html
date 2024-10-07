@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Glasses Try-On</title>
+    <style>
+        /* Style for vertical button layout */
+        .button-group-vertical {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* Style for horizontal button layout */
+        .button-group-horizontal {
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+            gap: 10px;  /* Space between buttons */
+        }
+
+        /* Styling for buttons */
+        button {
+            padding: 10px 20px;
+            margin: 10px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        /* Hide sections initially */
+        #webcam-section {
+            display: none;
+        }
+
+        #processed-image-section {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <h1>Try On Glasses</h1>
+
+    <!-- Upload form -->
+    <div>
+        <h2>Upload Glasses Image</h2>
+        <form id="uploadForm" enctype="multipart/form-data">
+            <input type="file" id="glassesImage" name="glasses_image" accept="image/*">
+        </form>
+    </div>
+
+    <!-- Buttons (choose either vertical or horizontal layout by toggling the class) -->
+    <div class="button-group-horizontal">  <!-- Change to "button-group-vertical" for vertical layout -->
+        <button type="button" id="bgRemoverBtn">Remove Background</button>
+        <button type="button" id="quickTryBtn">Quick Try</button>
+    </div>
+
+    <!-- Processed Image Display -->
+    <div id="processed-image-section">
+        <h2>Processed Image</h2>
+        <img id="processedImage" alt="Processed Glasses Image" style="max-width: 100%; height: auto;">
+    </div>
+
+    <!-- Webcam feed -->
+    <div id="webcam-section">
+        <h2>Webcam Feed with Glasses Overlay</h2>
+        <img id="webcam-feed" alt="Webcam feed" width="640" height="480">
+    </div>
+
+    <!-- JavaScript -->
+    <script>
+        const uploadForm = document.getElementById('uploadForm');
+        const bgRemoverBtn = document.getElementById('bgRemoverBtn');
+        const quickTryBtn = document.getElementById('quickTryBtn');
+        const processedImage = document.getElementById('processedImage');
+        const webcamSection = document.getElementById('webcam-section');
+        const webcamFeed = document.getElementById('webcam-feed');
+        const processedImageSection = document.getElementById('processed-image-section');
+
+        let imageUploaded = false;  // To keep track of whether an image has been uploaded and processed
+
+        // Handle background removal when clicking the "Remove Background" button
+        bgRemoverBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+
+            const formData = new FormData(uploadForm);
+            if (!formData.get('glasses_image')) {
+                alert('Please upload an image before removing the background.');
+                return;
+            }
+
+            fetch('/', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    // Display the processed image
+                    processedImage.src = data.image_url;
+                    processedImageSection.style.display = 'block';  // Show processed image section
+                    imageUploaded = true;  // Mark that the image has been successfully processed
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            })
+            .catch(err => console.error('Error:', err));
+        });
+
+        // Handle "Quick Try" button click
+        quickTryBtn.addEventListener('click', function() {
+            if (!imageUploaded) {
+                alert('Image not uploaded or processed. Please upload and remove background first.');
+                return;
+            }
+
+            // Hide the processed image and show the webcam feed
+            processedImageSection.style.display = 'none';
+            webcamSection.style.display = 'block';
+            webcamFeed.src = "/webcam_feed";
+        });
+    </script>
+</body>
+</html>
